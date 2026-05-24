@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Quản Lý - Nhật Ký Tập Luyện</title>
+    <link class="jsbin" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1/themes/base/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">SportTracker</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="index.html">Trang Chủ</a>
+                <a class="nav-link active" href="admin.html">Trang Quản Lý</a>
+                <a class="nav-link" href="debug.html">Trang Debug</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="mb-4 text-center text-uppercase font-weight-bold text-dark">Quản Lý Nhật Ký Tập Luyện</h2>
+        
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-dark text-white font-weight-bold">Thêm Nhật Ký Mới</div>
+                    <div class="card-body">
+                        <form id="workoutForm">
+                            <div class="form-group">
+                                <label for="mssv" class="font-weight-bold">Mã số sinh viên:</label>
+                                <input type="text" id="mssv" class="form-control" placeholder="Nhập MSSV để xét chẵn lẻ" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="exerciseName" class="font-weight-bold">Tên bài tập:</label>
+                                <input type="text" id="exerciseName" class="form-control" placeholder="Ví dụ: Chạy bộ, Đẩy ngực..." required>
+                            </div>
+                            <div class="form-group">
+                                <label for="duration" class="font-weight-bold">Số phút tập:</label>
+                                <input type="number" id="duration" class="form-control" min="1" placeholder="Nhập số phút" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="calories" class="font-weight-bold">Lượng calo (kcal):</label>
+                                <input type="number" id="calories" class="form-control" min="1" placeholder="Nhập lượng calo tiêu hao" required>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-block font-weight-bold">Ghi nhận bản ghi</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card mt-3 shadow-sm border-0 bg-white">
+                    <div class="card-body text-center">
+                        <span class="text-muted">Tổng số buổi tập trong tháng:</span>
+                        <h3 id="sessionCounter" class="font-weight-bold text-primary mt-1">0</h3>
+                        <small class="text-info">(Hệ thống sẽ Alert khi số buổi > 15)</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white font-weight-bold">Danh Sách Nhật Ký Tập Luyện</div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover mb-0" id="workoutTable">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>MSSV</th>
+                                        <th>Tên Bài Tập</th>
+                                        <th>Số Phút</th>
+                                        <th>Lượng Calo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Khởi tạo biến đếm tổng số buổi tập
+        let totalSessions = 0;
+
+        document.getElementById('workoutForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Ngăn trang web tải lại khi submit form
+
+            // Lấy giá trị từ các ô Input
+            const mssvValue = document.getElementById('mssv').value.trim();
+            const exerciseValue = document.getElementById('exerciseName').value.trim();
+            const durationValue = document.getElementById('duration').value;
+            const caloriesValue = document.getElementById('calories').value;
+
+            // Kiểm tra ký tự cuối của MSSV xem là số chẵn hay số lẻ
+            const lastChar = mssvValue.charAt(mssvValue.length - 1);
+            
+            if (isNaN(lastChar) || lastChar === '') {
+                alert("Ký tự cuối của Mã số sinh viên phải là một chữ số!");
+                return;
+            }
+            
+            const lastDigit = parseInt(lastChar);
+
+            // Tạo cấu trúc hàng (row) cho bảng Bootstrap
+            const newRowHtml = `
+                <tr>
+                    <td class="font-weight-bold">${mssvValue}</td>
+                    <td>${exerciseValue}</td>
+                    <td><span class="badge badge-secondary">${durationValue} phút</span></td>
+                    <td><span class="badge badge-warning">${caloriesValue} kcal</span></td>
+                </tr>
+            `;
+
+            const tableBody = document.getElementById('tableBody');
+
+            // --- Logic ràng buộc định danh ---
+            if (lastDigit % 2 !== 0) {
+                // Số lẻ: Chèn bản ghi vào ĐẦU bảng (afterbegin)
+                tableBody.insertAdjacentHTML('afterbegin', newRowHtml);
+            } else {
+                // Số chẵn: Chèn bản ghi vào CUỐI bảng (beforeend)
+                tableBody.insertAdjacentHTML('beforeend', newRowHtml);
+            }
+
+            // Tăng tổng số buổi tập lên 1 và cập nhật giao diện hiển thị
+            totalSessions++;
+            document.getElementById('sessionCounter').innerText = totalSessions;
+
+            // --- Logic tính năng bổ sung ---
+            if (totalSessions > 15) {
+                alert("Cơ thể đang ở trạng thái xuất sắc");
+            }
+
+            // Reset (xóa sạch dữ liệu vừa nhập trên Form) để chuẩn bị nhập lượt mới
+            document.getElementById('workoutForm').reset();
+        });
+    </script>
+</body>
+</html>
